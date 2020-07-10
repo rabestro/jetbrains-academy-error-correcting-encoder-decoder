@@ -2,7 +2,6 @@ package correcter;
 
 import java.util.Random;
 import java.util.Scanner;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -18,25 +17,41 @@ public class Application implements Runnable {
     public void run() {
         log.fine("Application started");
         final var scanner = new Scanner(System.in);
+
         final var message = scanner.nextLine();
+        final var encoded = encode(message);
+        final var received = send(encoded);
+        final var decoded = decode(received);
+
+        System.out.println(message);
+        System.out.println(encoded);
+        System.out.println(received);
+        System.out.println(decoded);
         scanner.close();
+    }
 
-        final var brokenMessage = SPLIT_BY_THREE
-                .splitAsStream(message)
-                .map(this::injectError)
-                .collect(joining());
+    private String encode(final String message) {
+        return message.replaceAll("(.)", "$1$1$1");
+    }
 
-        System.out.println(brokenMessage);
+    private String send(final String message) {
+        return SPLIT_BY_THREE.splitAsStream(message).map(this::injectError).collect(joining());
+    }
+
+    private String decode(final String message) {
+        return SPLIT_BY_THREE.splitAsStream(message).map(this::fixError).collect(joining());
     }
 
     private String injectError(final String subString) {
-        if (subString.length() < 3) {
-            log.log(Level.FINE, "Short substring received: " + subString);
-            return subString;
-        }
         final var chars = subString.toCharArray();
         chars[random.nextInt(chars.length)] = ERRORS.charAt(random.nextInt(ERRORS.length()));
         return new String(chars);
     }
 
+    private String fixError(final String subString) {
+        final var a = subString.charAt(0);
+        final var b = subString.charAt(1);
+        final var c = subString.charAt(2);
+        return String.valueOf(a == b || a == c ? a : b);
+    }
 }
