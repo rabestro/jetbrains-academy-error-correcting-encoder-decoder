@@ -31,7 +31,7 @@ public class Application implements Runnable {
 
     private String injectError(final String subString) {
         if (subString.length() < 3) {
-            log.log(Level.FINE, "Short substring received: '{}'", subString);
+            log.log(Level.FINE, "Short substring received: " + subString);
             return subString;
         }
         final var chars = subString.toCharArray();
