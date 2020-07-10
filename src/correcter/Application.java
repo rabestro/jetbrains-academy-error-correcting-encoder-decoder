@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 
 import static java.util.stream.Collectors.joining;
 
-public class Application implements Runnable {
+public final class Application implements Runnable {
     private static final Logger log = Logger.getLogger(Application.class.getName());
     private static final Random random = new Random();
     private static final Pattern SPLIT_BY_THREE = Pattern.compile("(?<=\\G...)");
