@@ -1,13 +1,13 @@
 package correcter;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Random;
 import java.util.logging.Logger;
+import java.util.stream.IntStream;
 
 public final class Application implements Runnable {
     private static final Logger log = Logger.getLogger(Application.class.getName());
@@ -17,17 +17,11 @@ public final class Application implements Runnable {
     public void run() {
         log.fine("Application started");
 
-        try {
-            final var message = Files.readString(Path.of("send.txt"));
-            final var buffer = ByteBuffer.allocate(message.length());
-
-            message.chars()
-                    .map(i -> i ^ (1 << random.nextInt(8)))
-                    .forEach(i -> buffer.put((byte) i));
-
-            FileChannel fc = new FileOutputStream("received.txt").getChannel();
-            fc.write(buffer.flip());
-            fc.close();
+        try (FileOutputStream writer = new FileOutputStream(new File("received.txt"))) {
+            final var message = Files.readAllBytes(Path.of("send.txt"));
+            IntStream.range(0, message.length)
+                    .forEach(i -> message[i] ^= (1 << random.nextInt(8)));
+            writer.write(message);
         } catch (IOException e) {
             e.printStackTrace();
         }
