@@ -70,30 +70,29 @@ public final class Application implements Runnable {
         }
     }
 
+    private interface GetBite {
+        boolean get(int i);
+    }
+
     private static void decode() {
         log.fine("Decoding the message");
         try (final var writer = new FileOutputStream(new File("decoded.txt"))) {
             final var message = BitSet.valueOf(Files.readAllBytes(Path.of("received.txt")));
             final var decoded = new BitSet(message.length() / 3);
-//            for (int i = 0, e = 0; i < decoded.length(); ++i) {
-//                if (message.get(e) == message.get(e + 1)) {
-//                    decoded.set(i, message.get(e));
-//                } else {
-//
-//                }
-//            }
-//            for (int i = 0, e = 0; i < message.length(); ++i) {
-//                encoded.set(e++, message.get(i));
-//                encoded.set(e++, message.get(i));
-//                if (e % THREE_BITES == 0) {
-//                    final var parityBit = message.get(i) ^ message.get(i - 1) ^ message.get(i - 2);
-//                    encoded.set(e++, parityBit);
-//                    encoded.set(e++, parityBit);
-//                }
-//                if (e % ONE_BYTE == 0) {
-//                    e += 6;
-//                }
-//            }
+
+            for (int i = 0, j = 0; i < message.length(); i += 8) {
+                final int index = i;
+                GetBite getBite = offset ->
+                        message.get(index + offset) == message.get(index + offset + 1)
+                                ? message.get(index + offset)
+                                : message.get(index + offset + 2)
+                                ^ message.get(index + (offset + 4) % 8)
+                                ^ message.get(index + (offset + 6) % 8);
+
+                decoded.set(j++, getBite.get(0));
+                decoded.set(j++, getBite.get(2));
+                decoded.set(j++, getBite.get(4));
+            }
             writer.write(decoded.toByteArray());
         } catch (IOException e) {
             e.printStackTrace();
